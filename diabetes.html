@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Diabetes Risk — DiagnoX</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --sky: #17C3CE;
+            --sky2: #0EA5B0;
+            --skysoft: #E0F7FA;
+            --skymid: #B2EBF2;
+            --white: #FFFFFF;
+            --bg: #F5FDFF;
+            --bg2: #EAF9FB;
+            --text: #0C2340;
+            --muted: #5A7A8A;
+            --light: #A0C4CC;
+            --coral: #FF6F61;
+            --coralsoft: #FFF0EE;
+            --amber: #FFB547;
+            --ambersoft: #FFF8EC;
+            --mint: #2DD4B0;
+            --mintsoft: #E6FAF5;
+            --border: #CBE9EF;
+            --shadow: rgba(23, 195, 206, .15);
+            --r: 22px;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        .bg-white {
+            background: #fff;
+        }
+
+        ::-webkit-scrollbar {
+            width: 14px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--skymid);
+            border-radius: 10px;
+            border: 3px solid var(--bg);
+            box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--sky);
+        }
+
+        /* ── NEW THEME TOGGLE (REACT STYLE) ── */
+        .theme-toggle-container {
+            width: 64px;
+            height: 32px;
+            padding: 4px;
+            border-radius: 100px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s;
+            position: relative;
+            border: 1px solid #e2e8f0;
+            background: #fff;
+        }
+
+        body.dark-theme .theme-toggle-container {
+            background: #09090b;
+            border-color: #27272a;
+        }
+
+        .theme-toggle-icon-wrap {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            position: relative;
+            z-index: 2;
+        }
+
+        .theme-toggle-icon-wrap.active {
+            background: #e5e7eb;
+        }
+
+        body.dark-theme .theme-toggle-icon-wrap.active {
+            background: #27272a;
+        }
+
+        .sun-icon {
+            color: #6b7280;
+            width: 16px;
+            height: 16px;
+        }
+
+        .moon-icon {
+            color: #6b7280;
+            width: 16px;
+            height: 16px;
+        }
+
+        body.dark-theme .sun-icon {
+            color: #71717a;
+        }
+
+        body.dark-theme .moon-icon {
+            color: #fff;
+        }
+
+        body:not(.dark-theme) .sun-icon {
+            color: #374151;
+        }
+
+        body:not(.dark-theme) .moon-icon {
+            color: #000;
+        }
+
+        .theme-toggle-thumb {
+            position: absolute;
+            left: 4px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            transition: all 0.3s;
+            z-index: 1;
+        }
+
+        body.dark-theme .theme-toggle-thumb {
+            transform: translateX(0);
+            background: #27272a;
+            left: 4px;
+        }
+
+        body:not(.dark-theme) .theme-toggle-thumb {
+            transform: translateX(32px);
+            background: #e5e7eb;
+        }
+
+        /* ── DARK THEME ── */
+        body.dark-theme {
+            --bg: #0B1118;
+            --bg2: #0F1720;
+            --text: #F8FAFC;
+            --white: #1E293B;
+            --border: #334155;
+            --muted: #94A3B8;
+            --light: #475569;
+            --shadow: rgba(0, 0, 0, .4);
+            --skysoft: rgba(23, 195, 206, .1);
+            --skymid: #334155;
+        }
+
+        body.dark-theme .bg-white {
+            background: var(--bg);
+        }
+
+        body.dark-theme nav {
+            background: rgba(11, 17, 24, .9);
+            border-bottom-color: #1E293B;
+        }
+
+        body.dark-theme .logo {
+            color: #fff;
+        }
+
+        body.dark-theme .tool-card {
+            background: #161F2A;
+            color: #fff;
+        }
+
+        body.dark-theme .fi {
+            background: #0B1118;
+            color: #fff;
+            border-color: #1E293B;
+        }
+
+        body.dark-theme .tc-header,
+        body.dark-theme .tc-emoji {
+            border-color: #1E293B;
+        }
+
+        /* ── NAV ── */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(16px);
+            border-bottom: 1.5px solid var(--border);
+            padding: 0 52px;
+            height: 84px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+        }
+
+        body.dark-theme nav {
+            background: rgba(11, 17, 24, 0.8);
+            border-bottom-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .logo {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.4rem;
+            color: var(--sky2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .logo-mark {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--sky), var(--sky2));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 14px var(--shadow);
+        }
+
+        .nav-cta {
+            background: linear-gradient(135deg, var(--sky), var(--sky2));
+            color: #fff;
+            border: none;
+            border-radius: 100px;
+            padding: 10px 26px;
+            font-weight: 700;
+            font-size: .88rem;
+            cursor: pointer;
+            font-family: inherit;
+            box-shadow: 0 4px 18px var(--shadow);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px var(--shadow);
+        }
+
+        /* ── PAGE LAYOUT ── */
+        .section {
+            padding: 40px 60px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .sec-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+        }
+
+        .sec-sub {
+            color: var(--muted);
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .tool-card {
+            background: #fff;
+            border-radius: var(--r);
+            border: 1.5px solid var(--border);
+            padding: 24px 30px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, .08);
+            max-width: 900px;
+            margin: 0 auto;
+            border-top: 4px solid var(--card-color);
+        }
+
+        .tc-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 16px;
+            border-bottom: 1.5px solid var(--border);
+            padding-bottom: 16px;
+        }
+
+        .tc-emoji {
+            font-size: 1.8rem;
+            background: var(--card-bg);
+            width: 50px;
+            height: 50px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1.5px solid var(--border);
+        }
+
+        .tc-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.5rem;
+        }
+
+        .tc-sub {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .three-col-form {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0 20px;
+        }
+
+        @media(max-width:768px) {
+            .three-col-form {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media(max-width:640px) {
+            .three-col-form {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .fl {
+            display: block;
+            font-weight: 800;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted);
+            margin: 8px 0 4px;
+        }
+
+        .fi {
+            width: 100%;
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1.5px solid var(--border);
+            font-family: inherit;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            background: var(--bg);
+            color: var(--text);
+            outline: none;
+        }
+
+        .fi:focus {
+            border-color: var(--sky);
+            box-shadow: 0 0 0 4px var(--skysoft);
+        }
+
+        .fhint {
+            font-size: 0.75rem;
+            color: var(--light);
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        .btn-sky {
+            background: linear-gradient(135deg, var(--sky), var(--sky2));
+            color: #fff;
+            border: none;
+            border-radius: 100px;
+            padding: 10px 24px;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform .2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-sky:hover {
+            transform: translateY(-2px);
+        }
+
+        .result-panel {
+            margin-top: 30px;
+        }
+
+        /* FOOTER */
+        footer {
+            background: #0B1118;
+            color: #fff;
+            padding: 80px 60px 40px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr 1fr;
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-col h4 {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+            color: #fff;
+        }
+
+        .footer-links a {
+            display: block;
+            color: rgba(255, 255, 255, 0.4);
+            text-decoration: none;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+            transition: color .2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--sky);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 60px;
+            padding-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .reveal {
+            animation: fadeUp 0.6s ease-out both;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <a href="/" class="logo">
+            <div class="logo-mark">🩺</div>
+            DiagnoX
+        </a>
+        <div style="display: flex; gap: 20px; align-items: center;">
+            <a href="/how-it-works"
+                style="color:var(--text); text-decoration:none; font-weight:700; font-size:.9rem;">How It Works</a>
+            <a href="/history"
+                style="color:var(--text); text-decoration:none; font-weight:700; font-size:.9rem;">History</a>
+            <div class="theme-toggle-container" onclick="toggleTheme()">
+                <div class="theme-toggle-thumb"></div>
+                <div class="theme-toggle-icon-wrap" id="moon-wrap">
+                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </div>
+                <div class="theme-toggle-icon-wrap" id="sun-wrap">
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </div>
+            </div>
+            <button class="nav-cta" onclick="location.href='/#checker-options'">Start Check →</button>
+        </div>
+    </nav>
+
+    <div class="section">
+        <div style="text-align:center; margin-bottom:20px;">
+            <p class="eyebrow reveal">Mode: Diabetes Prediction</p>
+            <h1 class="sec-title reveal">Assess Diabetes Risk</h1>
+            <p class="sec-sub reveal">Input your latest clinical data to evaluate your diabetes likelihood based on SVM
+                analysis.</p>
+        </div>
+
+        <div class="tool-card reveal" style="--card-color:#FFB547;--card-bg:#FFF8EC;">
+            <div class="tc-header">
+                <div class="tc-emoji">🩸</div>
+                <div>
+                    <div class="tc-title">Diabetes Test</div>
+                    <div class="tc-sub">Clinical measurements are analyzed against a trained SVM RBF model.</div>
+                </div>
+            </div>
+            <div class="three-col-form">
+                <div>
+                    <label class="fl">Gender</label>
+                    <select id="d-gender" class="fi" onchange="handleGenderChange()">
+                        <option value="" disabled selected>Select Gender</option>
+                        <option value="female">Female</option>
+                        <option value="male">Male</option>
+                    </select>
+                    <div id="preg-container" style="display:none;">
+                        <label class="fl">Pregnancies</label><input id="d-preg" class="fi" type="number" value="" placeholder="0 - 15">
+                    </div>
+                    <label class="fl">Glucose (mg/dL)</label><input id="d-glu" class="fi" type="number" value="" placeholder="70 - 200">
+                </div>
+                <div>
+                    <label class="fl">Blood Pressure (mm Hg)</label><input id="d-bp" class="fi" type="number" value="" placeholder="40 - 130">
+                    <label class="fl">Skin Thickness (mm)</label><input id="d-skin" class="fi" type="number" value="" placeholder="10 - 50">
+                    <label class="fl">Insulin (μU/mL)</label><input id="d-ins" class="fi" type="number" value="" placeholder="15 - 300">
+                </div>
+                <div>
+                    <label class="fl">BMI (kg/m²)</label><input id="d-bmi" class="fi" type="number" value="" placeholder="15.0 - 50.0" step="0.1">
+                    <label class="fl">Pedigree Function</label><input id="d-dpf" class="fi" type="number" value="" placeholder="0.08 - 2.50" step="0.01">
+                    <label class="fl">Age (years)</label><input id="d-age" class="fi" type="number" value="" placeholder="18 - 100">
+                </div>
+            </div>
+            <button class="btn-sky"
+                style="width:100%;justify-content:center;margin-top:20px;background:linear-gradient(135deg,#FFB547,#F59E0B);"
+                onclick="predictDiabetes()">🩸 Evaluate Now</button>
+            <div id="result-diabetes" class="result-panel"></div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-grid">
+            <div>
+                <div class="footer-logo">🩺 DiagnoX</div>
+                <p style="color:rgba(255,255,255,0.5); font-size: 0.9rem;">An AI-powered health prediction platform.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Modules</h4>
+                <div class="footer-links">
+                    <a href="/symptom">Symptom Checker</a>
+                    <a href="/heart">Heart Disease</a>
+                    <a href="/diabetes">Diabetes Risk</a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>Resources</h4>
+                <div class="footer-links">
+                    <a href="/how-it-works">How It Works</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div>© 2026 DiagnoX.</div>
+        </div>
+    </footer>
+
+    <script>
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            localStorage.setItem('diagnoX-theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
+            updateThemeToggle();
+        }
+        function updateThemeToggle() {
+            const isDark = document.body.classList.contains('dark-theme');
+            document.getElementById('moon-wrap').classList.toggle('active', isDark);
+            document.getElementById('sun-wrap').classList.toggle('active', !isDark);
+        }
+        if (localStorage.getItem('diagnoX-theme') === 'dark') document.body.classList.add('dark-theme');
+        updateThemeToggle();
+
+        function saveToHistory(type, result, confidence, risk, details = {}) {
+            const history = JSON.parse(localStorage.getItem('diagnoX-history') || '[]');
+            history.push({ type, result, confidence, risk, date: new Date().toLocaleString(), details });
+            localStorage.setItem('diagnoX-history', JSON.stringify(history));
+        }
+
+        function showLoading(id) { document.getElementById(id).innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-weight:600;">⏳ Analyzing...</div>'; }
+        function renderResult(id, data) {
+            const cols = { 'low-risk': '#2DD4B0', 'high-risk': '#FF6F61' };
+            const col = cols[data.risk] || '#17C3CE', pct = Math.round((data.confidence || 0) * 100);
+            const isDark = document.body.classList.contains('dark-theme');
+            const bg = isDark ? '#1E293B' : '#fff';
+            const border = isDark ? 'rgba(23, 195, 206, 0.4)' : 'rgba(23, 195, 206, 0.2)';
+
+            let extraHtml = '';
+            if (data.info && data.info.desc) {
+                extraHtml = `
+                    <div style="margin-top:20px; padding-top:15px; border-top:1px solid ${isDark ? '#334155' : '#eee'};">
+                        <div style="display:grid; grid-template-columns:1fr; gap:10px; margin-bottom:15px;">
+                            <div style="background:${isDark ? '#0F1720' : '#F5FDFF'}; padding:12px; border-radius:10px;">
+                                <div style="font-weight:800; font-size:0.65rem; color:var(--sky); margin-bottom:4px;">💊 MEDICATION SUGGESTION</div>
+                                <div style="font-size:0.8rem;">${data.info.meds}</div>
+                            </div>
+                            <div style="background:${isDark ? 'rgba(45,212,176,0.1)' : '#E6FAF5'}; padding:10px 14px; border-radius:10px; display:flex; align-items:center; gap:10px;">
+                                <div style="font-size:1.4rem;">👨‍⚕️</div>
+                                <div>
+                                    <div style="font-weight:800; font-size:0.65rem; color:#2DD4B0; text-transform:uppercase;">Specialist</div>
+                                    <div style="font-size:0.9rem; font-weight:700; color:${isDark ? '#fff' : '#1F2937'};">${data.info.doctor}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const prec = (data.precautions || []).map(p => `<li style="margin-bottom:5px;font-size:0.85rem;color:${isDark ? '#CBD5E1' : '#475569'}">• ${p}</li>`).join('');
+
+            document.getElementById(id).innerHTML = `
+                <div style="margin-top:32px; padding:28px; border-radius:24px; background:${bg}; border:2px solid ${border}; box-shadow:0 15px 40px rgba(0,0,0,0.1); animation:fadeUp 0.5s ease both;">
+                    <div style="font-family:'Syne',sans-serif; font-weight:800; font-size:1.25rem; color:${col}; margin-bottom:8px;">${data.label}</div>
+                    <div style="font-size:0.82rem; color:var(--muted); margin-bottom:15px;">Confidence Level: <strong style="color:${col};">${pct}%</strong></div>
+                    <div style="font-weight:800; font-size:0.7rem; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Recommendations</div>
+                    <ul style="list-style:none; padding:0; margin:0 0 15px 0;">${prec}</ul>
+                    ${extraHtml}
+                    <div style="font-size:0.65rem; color:var(--muted); font-style:italic;">⚠️ This is an ML projection. Consult a doctor for a professional diagnosis.</div>
+                </div>`;
+        }
+
+        function handleGenderChange() {
+            const gender = document.getElementById('d-gender').value;
+            const pregContainer = document.getElementById('preg-container');
+            if (gender === 'female') {
+                pregContainer.style.display = 'block';
+            } else {
+                pregContainer.style.display = 'none';
+                document.getElementById('d-preg').value = '';
+            }
+        }
+
+        async function predictDiabetes() {
+            const gender = document.getElementById('d-gender').value;
+            const preg = gender === 'female' ? document.getElementById('d-preg').value : '0';
+            const glucose = document.getElementById('d-glu').value;
+            const bp = document.getElementById('d-bp').value;
+            const skin = document.getElementById('d-skin').value;
+            const insulin = document.getElementById('d-ins').value;
+            const bmi = document.getElementById('d-bmi').value;
+            const dpf = document.getElementById('d-dpf').value;
+            const age = document.getElementById('d-age').value;
+
+            if (!gender || !glucose || !bp || !skin || !insulin || !bmi || !dpf || !age || (gender === 'female' && !preg)) {
+                alert('Please fill in all fields before analyzing.');
+                return;
+            }
+
+            showLoading('result-diabetes');
+            const p = { pregnancies: preg, glucose: glucose, bp: bp, skin: skin, insulin: insulin, bmi: bmi, dpf: dpf, age: age };
+            try {
+                const r = await fetch('/predict/diabetes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) });
+                const d = await r.json();
+                saveToHistory('Diabetes Test', d.label, d.confidence, d.risk, {
+                    inputs: p,
+                    meds: (d.info && d.info.meds) ? d.info.meds : 'N/A',
+                    doctor: (d.info && d.info.doctor) ? d.info.doctor : 'Endocrinologist'
+                });
+                renderResult('result-diabetes', d);
+            } catch (e) { }
+        }
+    </script>
+</body>
+
+</html>

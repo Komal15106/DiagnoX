@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>How DiagnoX Works — Technical Deep Dive</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --sky: #17C3CE;
+      --sky2: #0EA5B0;
+      --skysoft: #E0F7FA;
+      --skymid: #B2EBF2;
+      --white: #FFFFFF;
+      --bg: #F5FDFF;
+      --bg2: #EAF9FB;
+      --text: #0C2340;
+      --muted: #5A7A8A;
+      --coral: #FF6F61;
+      --coralsoft: #FFF0EE;
+      --amber: #FFB547;
+      --ambersoft: #FFF8EC;
+      --mint: #2DD4B0;
+      --mintsoft: #E6FAF5;
+      --border: #CBE9EF;
+      --shadow: rgba(23, 195, 206, .15);
+      --r: 22px;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar {
+      width: 14px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--skymid);
+      border-radius: 10px;
+      border: 3px solid var(--bg);
+      box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.1);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--sky);
+    }
+
+    /* ── NEW THEME TOGGLE (REACT STYLE) ── */
+    .theme-toggle-container {
+      width: 64px;
+      height: 32px;
+      padding: 4px;
+      border-radius: 100px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.3s;
+      position: relative;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+    }
+
+    body.dark-theme .theme-toggle-container {
+      background: #09090b;
+      border-color: #27272a;
+    }
+
+    .theme-toggle-icon-wrap {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      position: relative;
+      z-index: 2;
+    }
+
+    .theme-toggle-icon-wrap.active {
+      background: #e5e7eb;
+    }
+
+    body.dark-theme .theme-toggle-icon-wrap.active {
+      background: #27272a;
+    }
+
+    .sun-icon {
+      color: #6b7280;
+      width: 14px;
+      height: 14px;
+    }
+
+    .moon-icon {
+      color: #6b7280;
+      width: 14px;
+      height: 14px;
+    }
+
+    body.dark-theme .moon-icon {
+      color: #fff;
+    }
+
+    body.dark-theme .sun-icon {
+      color: #71717a;
+    }
+
+    body:not(.dark-theme) .sun-icon {
+      color: #374151;
+    }
+
+    body:not(.dark-theme) .moon-icon {
+      color: #000;
+    }
+
+    .theme-toggle-thumb {
+      position: absolute;
+      left: 4px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #e5e7eb;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 1;
+    }
+
+    body.dark-theme .theme-toggle-thumb {
+      transform: translateX(0);
+      background: #27272a;
+      left: 4px;
+    }
+
+    body:not(.dark-theme) .theme-toggle-thumb {
+      transform: translateX(32px);
+      background: #e5e7eb;
+    }
+
+    /* ── DARK THEME ── */
+    body.dark-theme {
+      --bg: #0B1118;
+      --bg2: #0F1720;
+      --text: #E2E8F0;
+      --white: #161F2A;
+      --border: #1E293B;
+      --muted: #94A3B8;
+      --light: #475569;
+      --shadow: rgba(0, 0, 0, .4);
+      --skysoft: rgba(23, 195, 206, .08);
+      --skymid: #1E293B;
+    }
+
+    body.dark-theme .bg-white,
+    body.dark-theme .ps-body,
+    body.dark-theme .model-card,
+    body.dark-theme .tech-card,
+    body.dark-theme .faq-item {
+      background: #161F2A;
+      color: #fff;
+      border-color: #1E293B;
+    }
+
+    body.dark-theme .bg-soft {
+      background: #0F1720;
+    }
+
+    body.dark-theme .pill-num,
+    body.dark-theme .pill-lbl {
+      color: #000;
+    }
+
+    body.dark-theme .page-hero {
+      background: linear-gradient(135deg, #0B1118, #0F1720);
+    }
+
+    body.dark-theme nav {
+      background: rgba(11, 17, 24, .8);
+      border-bottom-color: rgba(255, 255, 255, 0.05);
+    }
+
+    /* NAV */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(16px);
+      border-bottom: 1.5px solid var(--border);
+      padding: 0 52px;
+      height: 84px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.4rem;
+      color: var(--sky2);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .logo-mark {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, var(--sky), var(--sky2));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px var(--shadow);
+    }
+
+    .nav-cta {
+      background: linear-gradient(135deg, var(--sky), var(--sky2));
+      color: #fff;
+      border: none;
+      border-radius: 100px;
+      padding: 10px 26px;
+      font-weight: 700;
+      font-size: .88rem;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 4px 18px var(--shadow);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .nav-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px var(--shadow);
+    }
+
+    /* PAGE HEADER */
+    .page-hero {
+      background: linear-gradient(135deg, #E8FAFB, #D6F5F7);
+      padding: 70px 60px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page-hero-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .page-hero-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(70px);
+      opacity: .3;
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--sky2);
+      margin-bottom: 8px;
+    }
+
+    .page-hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      line-height: 1.15;
+      letter-spacing: -.025em;
+      margin-bottom: 14px;
+    }
+
+    .page-hero h1 em {
+      font-style: normal;
+      color: var(--sky2);
+    }
+
+    .page-hero p {
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.75;
+      max-width: 540px;
+    }
+
+    .hero-pills {
+      display: flex;
+      gap: 12px;
+      margin-top: 28px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 100px;
+      padding: 9px 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, .05);
+      font-size: .85rem;
+    }
+
+    .pill-num {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      color: var(--sky2);
+    }
+
+    .pill-lbl {
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    /* LAYOUT */
+    .section {
+      padding: 72px 60px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .sec-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.5rem, 2.5vw, 2.2rem);
+      line-height: 1.15;
+      letter-spacing: -.02em;
+      margin-bottom: 10px;
+    }
+
+    .sec-sub {
+      color: var(--muted);
+      line-height: 1.75;
+      max-width: 500px;
+      font-weight: 500;
+      margin-bottom: 36px;
+    }
+
+    .bg-white {
+      background: #fff;
+    }
+
+    .bg-soft {
+      background: var(--bg2);
+    }
+
+    /* PIPELINE STEPS */
+    .pipeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+    }
+
+    .pipeline::before {
+      content: '';
+      position: absolute;
+      left: 27px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--sky), var(--mint));
+      opacity: .25;
+    }
+
+    .pipeline-step {
+      display: flex;
+      gap: 22px;
+      align-items: flex-start;
+      padding: 24px 0;
+      position: relative;
+    }
+
+    .ps-num {
+      width: 56px;
+      height: 56px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--sky), var(--sky2));
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 20px var(--shadow);
+      position: relative;
+      z-index: 1;
+    }
+
+    .ps-body {
+      flex: 1;
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px 24px;
+      border: 1.5px solid var(--border);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, .05);
+    }
+
+    .ps-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ps-desc {
+      color: var(--muted);
+      font-size: .85rem;
+      line-height: 1.65;
+    }
+
+    .ps-code {
+      background: var(--bg2);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-family: monospace;
+      font-size: .78rem;
+      color: var(--sky2);
+      margin-top: 10px;
+      border: 1px solid var(--border);
+      overflow-x: auto;
+    }
+
+    /* MODEL CARDS */
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 36px;
+    }
+
+    .model-card {
+      background: #fff;
+      border-radius: var(--r);
+      border: 1.5px solid var(--border);
+      padding: 28px;
+      transition: transform .3s, box-shadow .3s;
+    }
+
+    .model-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, .1);
+    }
+
+    .mc-icon {
+      font-size: 2.4rem;
+      margin-bottom: 14px;
+    }
+
+    .mc-badge {
+      display: inline-block;
+      font-size: .68rem;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 100px;
+      margin-bottom: 12px;
+    }
+
+    .mc-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.05rem;
+      margin-bottom: 6px;
+    }
+
+    .mc-algo {
+      font-size: .82rem;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .mc-stat {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: .78rem;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .mc-stat:last-child {
+      border-bottom: none;
+    }
+
+    .mc-stat-val {
+      font-weight: 800;
+      color: var(--sky2);
+    }
+
+    /* DATASET TABLE */
+    .ds-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      font-size: .85rem;
+    }
+
+    .ds-table th {
+      background: var(--skysoft);
+      color: var(--sky2);
+      padding: 12px 18px;
+      text-align: left;
+      font-weight: 800;
+      font-size: .75rem;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .ds-table td {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .ds-table tr:hover td {
+      background: var(--bg2);
+    }
+
+    .ds-table td:first-child {
+      font-weight: 700;
+    }
+
+    /* TECH STACK */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .tech-card {
+      background: #fff;
+      border-radius: 16px;
+      border: 1.5px solid var(--border);
+      padding: 24px;
+      text-align: center;
+    }
+
+    .tc-emoji {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+
+    .tc-name {
+      font-weight: 800;
+      font-size: .9rem;
+    }
+
+    .tc-ver {
+      font-size: .75rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* FAQ */
+    .faq-list {
+      margin-top: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .faq-item {
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .faq-q {
+      padding: 20px 24px;
+      font-weight: 800;
+      font-size: .95rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background .2s;
+    }
+
+    .faq-q:hover {
+      background: var(--bg2);
+    }
+
+    .faq-chevron {
+      font-size: .8rem;
+      color: var(--muted);
+      transition: transform .3s;
+    }
+
+    .faq-a {
+      padding: 0 24px;
+      max-height: 0;
+      overflow: hidden;
+      transition: all .3s ease-out;
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.6;
+    }
+
+    .faq-item.open .faq-a {
+      padding: 0 24px 20px;
+      max-height: 200px;
+    }
+
+    .faq-item.open .faq-chevron {
+      transform: rotate(180deg);
+    }
+
+    .disclaimer-box {
+      background: var(--ambersoft);
+      border: 1.5px solid var(--amber);
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 40px;
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+      font-size: .88rem;
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    footer {
+      background: #0B1118;
+      padding: 80px 60px 40px;
+      color: #fff;
+    }
+
+    .footer-bottom {
+      margin-top: 60px;
+      padding-top: 40px;
+      border-top: 1px solid rgba(255, 255, 255, .1);
+      display: flex;
+      justify-content: space-between;
+      color: rgba(255, 255, 255, .4);
+      font-size: .8rem;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(24px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .reveal {
+      opacity: 0;
+    }
+
+    .reveal.in {
+      animation: fadeUp .6s cubic-bezier(.16, 1, .3, 1) forwards;
+    }
+
+    .d1 {
+      animation-delay: .1s;
+    }
+
+    .d2 {
+      animation-delay: .2s;
+    }
+
+    .d3 {
+      animation-delay: .3s;
+    }
+  </style>
+</head>
+
+<body>
+  <nav>
+    <a href="/" class="logo">
+      <div class="logo-mark">🩺</div>
+      DiagnoX
+    </a>
+    <div style="display: flex; gap: 24px; align-items: center;">
+      <a href="/how-it-works" style="color:var(--sky2); text-decoration:none; font-weight:700; font-size:.9rem;">How It
+        Works</a>
+      <a href="/history" style="color:var(--text); text-decoration:none; font-weight:700; font-size:.9rem;">History</a>
+      <div class="theme-toggle-container" onclick="toggleTheme()" aria-label="Toggle Dark Mode">
+        <div class="theme-toggle-thumb"></div>
+        <div class="theme-toggle-icon-wrap" id="moon-wrap">
+          <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </div>
+        <div class="theme-toggle-icon-wrap" id="sun-wrap">
+          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </div>
+      </div>
+      <button class="nav-cta" onclick="location.href='/#checker-options'">Start Check →</button>
+    </div>
+  </nav>
+
+  <header class="page-hero">
+    <div class="page-hero-blob b1" style="width:400px;height:400px;background:var(--sky);top:-100px;right:-50px;"></div>
+    <div class="page-hero-inner">
+      <p class="eyebrow">Technical Overview</p>
+      <h1>How DiagnoX<br /><em>Actually Works</em></h1>
+      <p>Exploring the machine learning pipeline behind our real-time health predictions, from raw datasets to model
+        deployment.</p>
+      <div class="hero-pills">
+        <div class="pill"><span class="pill-num">92%</span> <span class="pill-lbl">Accuracy</span></div>
+        <div class="pill"><span class="pill-num">3</span> <span class="pill-lbl">ML Models</span></div>
+        <div class="pill"><span class="pill-num">130+</span> <span class="pill-lbl">Symptoms</span></div>
+      </div>
+    </div>
+  </header>
+
+  <section class="section bg-white" style="padding-bottom: 0;">
+    <!-- TECH STACK SECTION -->
+    <div style="margin-bottom: 80px;">
+      <p class="eyebrow reveal">Core Tech</p>
+      <h2 class="sec-title reveal d1">Our Technology Stack</h2>
+      <p class="sec-sub reveal d2">We leverage a robust and modern stack for optimal performance and scalability.</p>
+      <div class="tech-grid">
+        <div class="tech-card reveal d1">
+          <div class="tc-emoji">🐍</div>
+          <div class="tc-name">Python</div>
+          <div class="tc-ver">3.10+ Backend</div>
+          <p class="ps-desc" style="margin-top: 10px;">Backend logic, ML model training, and API development.</p>
+        </div>
+        <div class="tech-card reveal d2">
+          <div class="tc-emoji">⚡</div>
+          <div class="tc-name">FastAPI</div>
+          <div class="tc-ver">High Perf API</div>
+          <p class="ps-desc" style="margin-top: 10px;">High-performance web framework for building medical APIs.</p>
+        </div>
+        <div class="tech-card reveal d3">
+          <div class="tc-emoji">⚛️</div>
+          <div class="tc-name">React</div>
+          <div class="tc-ver">Interactive UI</div>
+          <p class="ps-desc" style="margin-top: 10px;">Frontend development for dynamic and responsive interfaces.</p>
+        </div>
+        <div class="tech-card reveal d4">
+          <div class="tc-emoji">🧠</div>
+          <div class="tc-name">Scikit-Learn</div>
+          <div class="tc-ver">ML Engine</div>
+          <p class="ps-desc" style="margin-top: 10px;">Library for model training, evaluation and risk prediction.</p>
+        </div>
+        <div class="tech-card reveal d1">
+          <div class="tc-emoji">🔼</div>
+          <div class="tc-name">Vercel</div>
+          <div class="tc-ver">Deploy-Ready</div>
+          <p class="ps-desc" style="margin-top: 10px;">Cloud platform for static sites and Serverless Functions.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PIPELINE SECTION -->
+    <div style="margin-top: 40px;">
+      <p class="eyebrow reveal">The Pipeline</p>
+      <h2 class="sec-title reveal d1">How DiagnoX Works</h2>
+      <p class="sec-sub reveal d2">Our process is designed for maximum accuracy and user-friendliness.</p>
+      <div class="pipeline">
+        <div class="pipeline-step reveal d1">
+          <div class="ps-num">01</div>
+          <div class="ps-body">
+            <div class="ps-title">Data Collection</div>
+            <div class="ps-desc">Gathering diverse medical datasets, including symptoms, patient history, and clinical
+              measurements.</div>
+          </div>
+        </div>
+        <div class="pipeline-step reveal d2">
+          <div class="ps-num">02</div>
+          <div class="ps-body">
+            <div class="ps-title">Data Preprocessing</div>
+            <div class="ps-desc">Cleaning, normalizing, and transforming raw data to prepare it for optimal model
+              training.</div>
+            <div class="ps-code">X_scaled = StandardScaler().fit_transform(X)</div>
+          </div>
+        </div>
+        <div class="pipeline-step reveal d3">
+          <div class="ps-num">03</div>
+          <div class="ps-body">
+            <div class="ps-title">Model Training</div>
+            <div class="ps-desc">Utilizing robust algorithms like SVM and Random Forest to train high-accuracy
+              predictive models.</div>
+            <div class="ps-code">model.fit(X_train, y_train)</div>
+          </div>
+        </div>
+        <div class="pipeline-step reveal d4">
+          <div class="ps-num">04</div>
+          <div class="ps-body">
+            <div class="ps-title">API Development</div>
+            <div class="ps-desc">Building a robust FastAPI layer to serve predictions and handle user health requests
+              efficiently.</div>
+          </div>
+        </div>
+        <div class="pipeline-step reveal d1">
+          <div class="ps-num">05</div>
+          <div class="ps-body">
+            <div class="ps-title">Frontend Integration</div>
+            <div class="ps-desc">Creating an intuitive, premium user interface for seamless interaction with health
+              insights.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section bg-soft">
+    <p class="eyebrow reveal">Algorithms</p>
+    <h2 class="sec-title reveal d1">Our Prediction Models</h2>
+    <p class="sec-sub reveal d2">We use specific algorithms tailored to the nature of each medical dataset.</p>
+    <div class="model-grid">
+      <div class="model-card reveal d1">
+        <div class="mc-icon">🧬</div>
+        <div class="mc-badge" style="background:var(--skysoft);color:var(--sky2);">Classification</div>
+        <div class="mc-title">Symptom Checker</div>
+        <div class="mc-algo">Random Forest (100 Trees)</div>
+        <div class="mc-stat"><span>Precision</span> <span class="mc-stat-val">91.8%</span></div>
+        <div class="mc-stat"><span>Recall</span> <span class="mc-stat-val">90.4%</span></div>
+      </div>
+      <div class="model-card reveal d2">
+        <div class="mc-icon">❤️</div>
+        <div class="mc-badge" style="background:var(--coralsoft);color:var(--coral);">SVM Linear</div>
+        <div class="mc-title">Heart Risk</div>
+        <div class="mc-algo">Support Vector Machine</div>
+        <div class="mc-stat"><span>Accuracy</span> <span class="mc-stat-val">84.2%</span></div>
+        <div class="mc-stat"><span>F1-Score</span> <span class="mc-stat-val">0.83</span></div>
+      </div>
+      <div class="model-card reveal d3">
+        <div class="mc-icon">🩸</div>
+        <div class="mc-badge" style="background:var(--ambersoft);color:var(--amber);">SVM RBF</div>
+        <div class="mc-title">Diabetes Test</div>
+        <div class="mc-algo">Hyper-tuned SVM</div>
+        <div class="mc-stat"><span>Inference</span> <span class="mc-stat-val">2ms</span></div>
+        <div class="mc-stat"><span>Accuracy</span> <span class="mc-stat-val">78.5%</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DATASETS -->
+  <section class="section bg-white">
+    <p class="eyebrow reveal">Data Sources</p>
+    <h2 class="sec-title reveal d1">The Training Data</h2>
+    <table class="ds-table reveal d2">
+      <thead>
+        <tr>
+          <th>Dataset</th>
+          <th>Source</th>
+          <th>Entries</th>
+          <th>Features</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>🩸 Diabetes</td>
+          <td>Pima Indians Database</td>
+          <td>768</td>
+          <td>8 numerical</td>
+          <td>UCI / Kaggle</td>
+        </tr>
+        <tr>
+          <td>❤️ Heart Disease</td>
+          <td>Cleveland Dataset</td>
+          <td>303</td>
+          <td>13 clinical</td>
+          <td>UCI / Kaggle</td>
+        </tr>
+        <tr>
+          <td>🌡️ Symptom Checker</td>
+          <td>Disease Prediction</td>
+          <td>4,920</td>
+          <td>130+ symptoms</td>
+          <td>Kaggle</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section bg-soft">
+    <p class="eyebrow reveal">Common Questions</p>
+    <h2 class="sec-title reveal d1">Frequently Asked Questions</h2>
+    <div class="faq-list reveal d2">
+      <div class="faq-item">
+        <div class="faq-q">Is my health data stored? <span class="faq-chevron">▾</span></div>
+        <div class="faq-a">No. DiagnoX does not store or transmit any of your input data. All inputs are processed
+          in-memory and discarded.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">How accurate are the predictions? <span class="faq-chevron">▾</span></div>
+        <div class="faq-a">The Symptom Checker achieves ~92% accuracy, while SVM models for chronic conditions range
+          between 78–85%.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Can I use this instead of a doctor? <span class="faq-chevron">▾</span></div>
+        <div class="faq-a">No. DiagnoX is for informational purposes ONLY. Always consult a qualified healthcare
+          provider for clinical diagnosis.</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;">
+      <div
+        style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;display:flex;align-items:center;gap:10px;">
+        <div class="logo-mark"><svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+            <path d="M7.5 8.3h5M10 5.8v5" stroke="white" stroke-width="2" stroke-linecap="round" />
+          </svg></div>
+        DiagnoX
+      </div>
+      <div>© 2026 DiagnoX. Built with Python & Scikit-Learn</div>
+    </div>
+  </footer>
+
+  <script>
+    function toggleTheme() {
+      document.body.classList.toggle('dark-theme');
+      const isDark = document.body.classList.contains('dark-theme');
+      localStorage.setItem('diagnoX-theme', isDark ? 'dark' : 'light');
+      updateThemeToggle();
+    }
+    function updateThemeToggle() {
+      const isDark = document.body.classList.contains('dark-theme');
+      const moonWrap = document.getElementById('moon-wrap');
+      const sunWrap = document.getElementById('sun-wrap');
+      if (moonWrap && sunWrap) {
+        moonWrap.classList.toggle('active', isDark);
+        sunWrap.classList.toggle('active', !isDark);
+      }
+    }
+    if (localStorage.getItem('diagnoX-theme') === 'dark') document.body.classList.add('dark-theme');
+    updateThemeToggle();
+
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target); } });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+    document.querySelectorAll('.faq-q').forEach(q => {
+      q.addEventListener('click', () => {
+        const item = q.parentElement;
+        item.classList.toggle('open');
+      });
+    });
+  </script>
+</body>
+
+</html>

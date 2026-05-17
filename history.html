@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Health History — DiagnoX</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --sky: #17C3CE;
+            --sky2: #0EA5B0;
+            --skysoft: #E0F7FA;
+            --skymid: #B2EBF2;
+            --white: #FFFFFF;
+            --bg: #F5FDFF;
+            --bg2: #EAF9FB;
+            --text: #0C2340;
+            --muted: #5A7A8A;
+            --light: #A0C4CC;
+            --coral: #FF6F61;
+            --coralsoft: #FFF0EE;
+            --amber: #FFB547;
+            --ambersoft: #FFF8EC;
+            --mint: #2DD4B0;
+            --mintsoft: #E6FAF5;
+            --border: #CBE9EF;
+            --shadow: rgba(23, 195, 206, .15);
+            --r: 22px;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* ── DARK THEME ── */
+        body.dark-theme {
+            --bg: #0B1118;
+            --bg2: #0F1720;
+            --text: #E2E8F0;
+            --white: #161F2A;
+            --border: #1E293B;
+            --muted: #94A3B8;
+            --light: #475569;
+            --shadow: rgba(0, 0, 0, .4);
+            --skysoft: rgba(23, 195, 206, .08);
+            --skymid: #1E293B;
+        }
+
+        /* ── NAV ── */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(16px);
+            border-bottom: 1.5px solid var(--border);
+            padding: 0 52px;
+            height: 84px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+        }
+
+        body.dark-theme nav {
+            background: rgba(11, 17, 24, 0.8);
+            border-bottom-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .logo {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.4rem;
+            color: var(--sky2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .logo-mark {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--sky), var(--sky2));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 14px var(--shadow);
+        }
+
+        .nav-cta {
+            background: linear-gradient(135deg, var(--sky), var(--sky2));
+            color: #fff;
+            border: none;
+            border-radius: 100px;
+            padding: 10px 26px;
+            font-weight: 700;
+            font-size: .88rem;
+            cursor: pointer;
+            box-shadow: 0 4px 18px var(--shadow);
+            transition: transform 0.2s;
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-2px);
+        }
+
+        /* ── THEME TOGGLE ── */
+        .theme-toggle-container {
+            width: 64px;
+            height: 32px;
+            padding: 4px;
+            border-radius: 100px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s;
+            position: relative;
+            border: 1px solid #e2e8f0;
+            background: #fff;
+        }
+
+        body.dark-theme .theme-toggle-container {
+            background: #09090b;
+            border-color: #27272a;
+        }
+
+        .theme-toggle-icon-wrap {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            position: relative;
+            z-index: 2;
+        }
+
+        .theme-toggle-thumb {
+            position: absolute;
+            left: 4px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            transition: all 0.3s;
+            z-index: 1;
+        }
+
+        body.dark-theme .theme-toggle-thumb {
+            transform: translateX(0);
+            background: #27272a;
+        }
+
+        body:not(.dark-theme) .theme-toggle-thumb {
+            transform: translateX(32px);
+        }
+
+        /* ── HISTORY CONTENT ── */
+        .section {
+            padding: 80px 60px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .sec-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 2.8rem;
+            margin-bottom: 12px;
+        }
+
+        .sec-sub {
+            color: var(--muted);
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .history-item {
+            background: #fff;
+            border: 1.5px solid var(--border);
+            border-radius: 20px;
+            padding: 24px 32px;
+            display: grid;
+            grid-template-columns: 60px 1fr 140px 80px 40px;
+            align-items: center;
+            gap: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            animation: fadeUp 0.5s ease both;
+        }
+
+        body.dark-theme .history-item {
+            background: #161F2A;
+        }
+
+        .history-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .h-type-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            background: var(--skysoft);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        .h-main {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .h-title {
+            font-weight: 800;
+            font-size: 1.05rem;
+        }
+
+        .h-date {
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        .h-risk {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 4px 12px;
+            border-radius: 100px;
+            text-align: center;
+        }
+
+        .risk-low {
+            background: var(--mintsoft);
+            color: var(--mint);
+        }
+
+        .risk-high {
+            background: var(--coralsoft);
+            color: var(--coral);
+        }
+
+        .risk-detected {
+            background: var(--ambersoft);
+            color: var(--amber);
+        }
+
+        .h-conf {
+            text-align: right;
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--sky2);
+        }
+
+        .btn-delete {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-delete:hover {
+            background: var(--coralsoft);
+            color: var(--coral);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: #fff;
+            border: 2px dashed var(--border);
+            border-radius: 20px;
+            color: var(--muted);
+        }
+
+        body.dark-theme .empty-state {
+            background: #161F2A;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        footer {
+            background: #0B1118;
+            color: #fff;
+            padding: 80px 60px 40px;
+            margin-top: 100px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <a href="/" class="logo">
+            <div class="logo-mark">🩺</div>
+            DiagnoX
+        </a>
+        <div style="display: flex; gap: 24px; align-items: center;">
+            <a href="/how-it-works"
+                style="color:var(--text); text-decoration:none; font-weight:700; font-size:.9rem;">How It Works</a>
+            <a href="/history"
+                style="color:var(--sky2); text-decoration:none; font-weight:700; font-size:.9rem; border-bottom: 2px solid var(--sky2);">History</a>
+            <div class="theme-toggle-container" onclick="toggleTheme()">
+                <div class="theme-toggle-thumb"></div>
+                <div class="theme-toggle-icon-wrap" id="moon-wrap">
+                    <svg style="width:16px;height:16px;color:#6b7280;" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </div>
+                <div class="theme-toggle-icon-wrap" id="sun-wrap">
+                    <svg style="width:16px;height:16px;color:#6b7280;" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </div>
+            </div>
+            <button class="nav-cta" onclick="location.href='/#checker-options'">Start Check →</button>
+        </div>
+    </nav>
+
+    <main class="section">
+        <h1 class="sec-title">Health History</h1>
+        <p class="sec-sub">Review your previous health risk assessments and symptoms checks.</p>
+
+        <div id="history-container" class="history-list">
+            <!-- Items injected via JS -->
+        </div>
+
+        <div style="margin-top: 30px; text-align: right;">
+            <button onclick="clearHistory()"
+                style="background:none; border:none; color:var(--coral); cursor:pointer; font-weight:700; font-size:0.85rem;">Clear
+                All Records</button>
+        </div>
+    </main>
+
+    <footer>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-family:'Syne',sans-serif; font-weight:800; font-size:1.3rem;">🩺 DiagnoX</div>
+            <div style="color:rgba(255,255,255,0.4); font-size:0.8rem;">© 2026 DiagnoX. Private & Secure.</div>
+        </div>
+    </footer>
+
+    <script>
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            localStorage.setItem('diagnoX-theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
+            updateThemeToggle();
+        }
+        function updateThemeToggle() {
+            const isDark = document.body.classList.contains('dark-theme');
+            const thumb = document.querySelector('.theme-toggle-thumb');
+            if (isDark) {
+                thumb.style.transform = 'translateX(0)';
+            } else {
+                thumb.style.transform = 'translateX(32px)';
+            }
+        }
+        if (localStorage.getItem('diagnoX-theme') === 'dark') document.body.classList.add('dark-theme');
+        updateThemeToggle();
+
+        const ICONS = {
+            'Symptom Check': '🧬',
+            'Heart Risk': '🫀',
+            'Diabetes Test': '🔬'
+        };
+
+        function loadHistory() {
+            const container = document.getElementById('history-container');
+            const raw = localStorage.getItem('diagnoX-history');
+            const history = raw ? JSON.parse(raw) : [];
+
+            if (history.length === 0) {
+                container.innerHTML = `<div class="empty-state">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">📂</div>
+                    <div style="font-weight: 800; font-size: 1.2rem; margin-bottom: 8px;">No records found</div>
+                    <p>Start a health check to begin recording your results.</p>
+                </div>`;
+                return;
+            }
+
+            container.innerHTML = history.reverse().map((item, idx) => {
+                const details = item.details || {};
+                const hasDetails = details.meds || details.symptoms || details.inputs;
+                const id = `detail-${idx}`;
+
+                let detailsHtml = '';
+                if (hasDetails) {
+                    detailsHtml = `
+                        <div id="${id}" style="display:none; grid-column: 1 / -1; margin-top:20px; padding-top:20px; border-top:1px dashed var(--border); animation:fadeUp 0.3s ease;">
+                            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:20px;">
+                                ${details.symptoms ? `
+                                    <div>
+                                        <div style="font-weight:800; font-size:0.7rem; color:var(--sky); text-transform:uppercase; margin-bottom:8px;">Symptoms Analyzed</div>
+                                        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                                            ${details.symptoms.map(s => `<span style="background:var(--skysoft); color:var(--sky2); padding:4px 10px; border-radius:100px; font-size:0.75rem; font-weight:700;">${s.replace('_', ' ')}</span>`).join('')}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                ${details.meds ? `
+                                    <div>
+                                        <div style="font-weight:800; font-size:0.7rem; color:var(--mint); text-transform:uppercase; margin-bottom:8px;">Suggested Medication</div>
+                                        <div style="font-size:0.85rem; line-height:1.5; font-weight:600;">${details.meds}</div>
+                                    </div>
+                                ` : ''}
+                                ${details.doctor ? `
+                                    <div>
+                                        <div style="font-weight:800; font-size:0.7rem; color:var(--coral); text-transform:uppercase; margin-bottom:8px;">Consultation</div>
+                                        <div style="font-size:0.85rem; font-weight:800;">👨‍⚕️ ${details.doctor}</div>
+                                    </div>
+                                ` : ''}
+                                ${details.inputs ? `
+                                    <div style="grid-column: 1/-1;">
+                                        <div style="font-weight:800; font-size:0.7rem; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Clinical Factors</div>
+                                        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px;">
+                                            ${Object.entries(details.inputs).map(([k, v]) => `<div><div style="font-size:0.65rem; color:var(--muted);">${k}</div><div style="font-size:0.8rem; font-weight:700;">${v}</div></div>`).join('')}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="history-item" style="display:grid; grid-template-columns: 60px 1fr 140px 80px 40px; cursor:pointer;" onclick="toggleDetail('${id}')">
+                        <div class="h-type-icon">${ICONS[item.type] || '🩺'}</div>
+                        <div class="h-main">
+                            <div class="h-title">${item.result}</div>
+                            <div class="h-date">${item.date} • ${item.type}</div>
+                        </div>
+                        <div>
+                            <div class="h-risk risk-${item.risk}">${item.risk.replace('-', ' ')}</div>
+                        </div>
+                        <div class="h-conf" style="text-align:center;">${Math.round(item.confidence * 100)}%</div>
+                        <div style="display:flex; justify-content:flex-end;">
+                            <button class="btn-delete" onclick="event.stopPropagation(); deleteItem(${history.length - 1 - idx})" title="Delete record">🗑️</button>
+                        </div>
+                        ${detailsHtml}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleDetail(id) {
+            const el = document.getElementById(id);
+            if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function deleteItem(idx) {
+            const history = JSON.parse(localStorage.getItem('diagnoX-history'));
+            history.splice(idx, 1);
+            localStorage.setItem('diagnoX-history', JSON.stringify(history));
+            loadHistory();
+        }
+
+        function clearHistory() {
+            if (confirm('Are you sure you want to delete all your health records? This cannot be undone.')) {
+                localStorage.setItem('diagnoX-history', JSON.stringify([]));
+                loadHistory();
+            }
+        }
+
+        loadHistory();
+    </script>
+</body>
+
+</html>
