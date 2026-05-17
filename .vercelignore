@@ -1,0 +1,14 @@
+__pycache__/
+venv/
+.venv/
+env/
+.env/
+*.ipynb
+*.csv
+.git/
+test_python*.py
+train_models.py
+check_model*.py
+debug_model.py
+build_html.py
+apply_pages.py
