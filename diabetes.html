@@ -537,12 +537,10 @@
                 </div>
                 <div>
                     <label class="fl">Blood Pressure (mm Hg)</label><input id="d-bp" class="fi" type="number" value="" placeholder="40 - 130">
-                    <label class="fl">Skin Thickness (mm)</label><input id="d-skin" class="fi" type="number" value="" placeholder="10 - 50">
                     <label class="fl">Insulin (μU/mL)</label><input id="d-ins" class="fi" type="number" value="" placeholder="15 - 300">
                 </div>
                 <div>
                     <label class="fl">BMI (kg/m²)</label><input id="d-bmi" class="fi" type="number" value="" placeholder="15.0 - 50.0" step="0.1">
-                    <label class="fl">Pedigree Function</label><input id="d-dpf" class="fi" type="number" value="" placeholder="0.08 - 2.50" step="0.01">
                     <label class="fl">Age (years)</label><input id="d-age" class="fi" type="number" value="" placeholder="18 - 100">
                 </div>
             </div>
@@ -657,13 +655,13 @@
             const preg = gender === 'female' ? document.getElementById('d-preg').value : '0';
             const glucose = document.getElementById('d-glu').value;
             const bp = document.getElementById('d-bp').value;
-            const skin = document.getElementById('d-skin').value;
+            const skin = "20";
             const insulin = document.getElementById('d-ins').value;
             const bmi = document.getElementById('d-bmi').value;
-            const dpf = document.getElementById('d-dpf').value;
+            const dpf = "0.5";
             const age = document.getElementById('d-age').value;
 
-            if (!gender || !glucose || !bp || !skin || !insulin || !bmi || !dpf || !age || (gender === 'female' && !preg)) {
+            if (!gender || !glucose || !bp || !insulin || !bmi || !age || (gender === 'female' && !preg)) {
                 alert('Please fill in all fields before analyzing.');
                 return;
             }

@@ -537,7 +537,6 @@
                     <label class="fl">Resting BP</label><input id="h-trestbps" class="fi" type="number" value="" placeholder="94 - 200">
                 </div>
                 <div>
-                    <label class="fl">ST Depression</label><input id="h-oldpeak" class="fi" type="number" value="" placeholder="0.0 - 6.2" step="0.1">
                     <label class="fl">Thalassemia</label><select id="h-thal" class="fi">
                         <option value="" disabled selected>Select Thalassemia</option>
                         <option value="1">Normal</option>
@@ -595,9 +594,9 @@
                 age: document.getElementById('h-age').value, sex: document.getElementById('h-sex').value,
                 cp: document.getElementById('h-cp').value, trestbps: document.getElementById('h-trestbps').value,
                 chol: document.getElementById('h-chol').value, fbs: 0, restecg: 0, thalach: document.getElementById('h-thalach').value,
-                exang: 0, oldpeak: document.getElementById('h-oldpeak').value, slope: 1, ca: 0, thal: document.getElementById('h-thal').value
+                exang: 0, oldpeak: 1.0, slope: 1, ca: 0, thal: document.getElementById('h-thal').value
             };
-            if(!p.age || !p.sex || !p.cp || !p.trestbps || !p.chol || !p.thalach || !p.oldpeak || !p.thal) {
+            if(!p.age || !p.sex || !p.cp || !p.trestbps || !p.chol || !p.thalach || !p.thal) {
                 alert('Please fill in all fields before analyzing.');
                 return;
             }
