@@ -144,19 +144,41 @@ def predict_symptom():
     try:
         data = request.get_json()
         selected = data.get('symptoms', [])
-        if len(selected) < 5:
-            return jsonify({"error": "Please select at least 5 symptoms for a reliable calculation."}), 400
-        sym_cols = (models.get("symptom_columns") or ALL_SYMPTOMS)[:38]
-        feature_vec = np.array([[1 if col in selected else 0 for col in sym_cols]])
-        pred_idx = int(models["symptom_model"].predict(feature_vec)[0])
-        disease = models["symptom_encoder"].inverse_transform([pred_idx])[0]
-        proba_arr = models["symptom_model"].predict_proba(feature_vec)[0]
-        confidence = float(proba_arr[pred_idx])
-        top3_idx = np.argsort(proba_arr)[::-1][:3]
-        top3 = [{"disease": models["symptom_encoder"].inverse_transform([int(i)])[0], "prob": float(proba_arr[i])} for i in top3_idx]
-        precautions = SYMPTOM_PRECAUTIONS.get(disease, DEFAULT_PRECAUTIONS)
-        info = DISEASE_DETAILS.get(disease, {})
-        return jsonify({"disease": disease, "confidence": confidence, "precautions": precautions, "top3": top3, "risk": "detected", "info": info})
+        duration = data.get('duration', 3)
+        age = data.get('age', 30)
+        sex = data.get('sex', 'Other')
+        
+        if len(selected) < 1:
+            return jsonify({"error": "Please select at least 1 symptom for a reliable calculation."}), 400
+            
+        from diagnostic_engine import DiagnosticEngine
+        import json
+        
+        engine = DiagnosticEngine()
+        result_json_str = engine.analyze(selected, duration, age, sex)
+        result = json.loads(result_json_str)
+        
+        disease = result.get("detected_normal_disease", "Unknown")
+        conf_str = result.get("confidence_score", "0%")
+        confidence = float(conf_str.strip('%')) / 100.0 if '%' in conf_str else 0.0
+        
+        info = {
+            "desc": f"Category: {result.get('symptom_category', 'General')} | Routed via: {result.get('target_model_route', 'LIGHTWEIGHT_RULES_ENGINE')}",
+            "meds": result.get("action_plan", "Please consult a doctor."),
+            "lifestyle": "Routine care at home, unless symptoms worsen.",
+            "doctor": "General Physician / Emergency Services" if disease == 'Emergency Flag' else "General Physician"
+        }
+        
+        precautions = [result.get("action_plan", "Please consult a doctor.")]
+        
+        return jsonify({
+            "disease": disease, 
+            "confidence": confidence, 
+            "precautions": precautions, 
+            "top3": [], 
+            "risk": "high-risk" if disease == 'Emergency Flag' else "detected", 
+            "info": info
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -170,10 +192,12 @@ def predict_diabetes():
         scaled = models["diabetes_scaler"].transform(user_input)
         prediction = int(models["diabetes_model"].predict(scaled)[0])
         probability = float(models["diabetes_model"].predict_proba(scaled)[0][prediction])
+
         risk = "high-risk" if prediction == 1 else "low-risk"
         label = "⚠️ High Risk of Diabetes" if prediction == 1 else "✅ Low Risk of Diabetes"
         precautions = DIABETES_PRECAUTIONS if prediction == 1 else LOW_RISK_TIPS
         info = DISEASE_DETAILS.get("High Risk of Diabetes", {}) if prediction == 1 else {}
+            
         return jsonify({"label": label, "confidence": probability, "precautions": precautions, "risk": risk, "info": info})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -190,10 +214,12 @@ def predict_heart():
         scaled = models["heart_scaler"].transform(user_input)
         prediction = int(models["heart_model"].predict(scaled)[0])
         probability = float(models["heart_model"].predict_proba(scaled)[0][prediction])
+
         risk = "high-risk" if prediction == 1 else "low-risk"
         label = "⚠️ Suspected Coronary Artery Disease" if prediction == 1 else "✅ Low Risk of Heart Disease"
         precautions = HEART_PRECAUTIONS if prediction == 1 else LOW_RISK_TIPS
         info = DISEASE_DETAILS.get("Suspected Coronary Artery Disease", {}) if prediction == 1 else {}
+            
         return jsonify({"label": label, "confidence": probability, "precautions": precautions, "risk": risk, "info": info})
     except Exception as e:
         return jsonify({"error": str(e)}), 500

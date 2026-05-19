@@ -68,6 +68,7 @@ st.markdown("""
   .low-risk  { border-left: 6px solid #2DD4B0; }
   .high-risk { border-left: 6px solid #FF6F61; }
   .detected  { border-left: 6px solid #FFB547; }
+  .inconclusive { border-left: 6px solid #FFB547; }
 
   h1, h2, h3 { font-family: 'Syne', sans-serif !important; font-weight: 800 !important; color: #0C2340; }
 
@@ -228,8 +229,8 @@ def model_ready(name: str) -> bool:
 
 def render_result_card(label: str, probability: float, precautions: list, risk_class: str, disease_name: str = None):
     """Render a styled result card with probability bar and precaution list."""
-    color_map = {"low-risk": "#2DD4B0", "high-risk": "#FF6F61", "detected": "#17C3CE"}
-    icon_map  = {"low-risk": "✅", "high-risk": "🔴", "detected": "🟡"}
+    color_map = {"low-risk": "#2DD4B0", "high-risk": "#FF6F61", "detected": "#17C3CE", "inconclusive": "#FFB547"}
+    icon_map  = {"low-risk": "✅", "high-risk": "🔴", "detected": "🟡", "inconclusive": "⚠️"}
     color = color_map.get(risk_class, "#17C3CE")
     icon  = icon_map.get(risk_class, "ℹ️")
 
@@ -449,7 +450,7 @@ elif "Heart" in selected:
                                     options=["0 — Typical Angina", "1 — Atypical Angina",
                                              "2 — Non-Anginal Pain", "3 — Asymptomatic"],
                                     help="Type of chest pain experienced")
-            trestbps = st.number_input("Resting Blood Pressure (mm Hg)", min_value=80, max_value=250, value=120,
+            trestbps = st.number_input("Resting Blood Pressure (mm Hg)", min_value=40, max_value=200, value=120,
                                        help="Resting BP on admission (normal: <120 mm Hg)")
             chol     = st.number_input("Serum Cholesterol (mg/dL)", min_value=100, max_value=600, value=220,
                                        help="Serum cholesterol in mg/dL (desirable: <200)")
@@ -536,43 +537,47 @@ elif "Symptom" in selected:
         help="Start typing to search. Select up to 10 symptoms.",
     )
 
+    col1, col2 = st.columns(2)
+    duration = col1.number_input("⏱️ Duration of symptoms (days):", min_value=1, max_value=365, value=3)
+    age = col2.number_input("👤 Age:", min_value=1, max_value=120, value=30)
+    sex = st.radio("⚥ Biological Sex:", ["Male", "Female", "Other"], horizontal=True)
+
     col_btn, col_clear = st.columns([1, 4])
     predict_clicked = col_btn.button("🔍 Check Symptoms", use_container_width=True)
 
     if predict_clicked:
-        if len(selected_display) < 5:
-            st.warning("⚠️ Please select at least 5 symptoms for analysis.")
+        if len(selected_display) < 1:
+            st.warning("⚠️ Please select at least 1 symptom for analysis.")
         else:
-            with st.spinner("Running Random Forest inference…"):
+            with st.spinner("Analyzing symptoms using Clinical Protocol..."):
                 try:
-                    # Build binary feature vector in correct column order
-                    sym_cols = (models.get("symptom_columns") or ALL_SYMPTOMS)[:38]
-                    selected_raw = [symptom_map[s] for s in selected_display]
-                    feature_vec = np.array([[1 if col in selected_raw else 0
-                                             for col in sym_cols]])
+                    from diagnostic_engine import DiagnosticEngine
+                    import json
+                    
+                    engine = DiagnosticEngine()
+                    result_json_str = engine.analyze(selected_display, duration, age, sex)
+                    result = json.loads(result_json_str)
 
-                    pred_idx   = models["symptom_model"].predict(feature_vec)[0]
-                    disease    = models["symptom_encoder"].inverse_transform([pred_idx])[0]
-                    proba_arr  = models["symptom_model"].predict_proba(feature_vec)[0]
-                    confidence = proba_arr[pred_idx]
-
-                    precautions = SYMPTOM_PRECAUTIONS.get(disease, DEFAULT_PRECAUTIONS)
+                    st.markdown("### 📋 Diagnostic Report")
+                    
+                    pred = result.get("detected_normal_disease", "Unknown")
+                    conf = result.get("confidence_score", "0%")
+                    route = result.get("target_model_route", "Unknown")
+                    category = result.get("symptom_category", "Unknown")
+                    
+                    if pred == "Emergency Flag":
+                        st.error(f"🚨 **URGENCY LEVEL: EMERGENCY**")
+                        st.error(f"Action: {result.get('action_plan', '')}")
+                    else:
+                        st.info(f"⚙️ **System Route:** `{route}` (Category: {category})")
 
                     render_result_card(
-                        f"Detected Condition: {disease}",
-                        confidence,
-                        precautions,
-                        "detected",
-                        disease
+                        f"Prediction: {pred}",
+                        float(conf.strip('%')) / 100.0 if '%' in conf else 0.0,
+                        [result.get("action_plan", "Routine care")],
+                        "high-risk" if pred == "Emergency Flag" else "detected",
+                        pred
                     )
-
-                    # Show top 3 alternate predictions
-                    with st.expander("🔎 See top 3 alternate predictions"):
-                        top3_idx = np.argsort(proba_arr)[::-1][:3]
-                        for rank, idx in enumerate(top3_idx, 1):
-                            dis = models["symptom_encoder"].inverse_transform([idx])[0]
-                            prob = proba_arr[idx]
-                            st.markdown(f"**{rank}.** {dis} — {prob*100:.1f}%")
 
                 except Exception as e:
                     st.error(f"Prediction failed: {e}")

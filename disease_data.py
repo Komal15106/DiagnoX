@@ -98,7 +98,7 @@ DISEASE_DETAILS = {
         "lifestyle": "Sleep under mosquito nets, wear long sleeves, use DEET repellent.",
         "doctor": "General Physician / Infectious Disease Expert"
     },
-    "Chicken pox": {
+    "Chickenpox": {
         "desc": "A highly contagious viral infection causing an itchy, blister-like rash on the skin.",
         "meds": "Antihistamines for itching, Acetaminophen for fever. Valacyclovir.",
         "lifestyle": "Isolate from others, trim nails to prevent scratching, lukewarm baths.",
@@ -266,5 +266,35 @@ DISEASE_DETAILS = {
         "meds": "Supportive care. Antivirals may be needed depending on the specific type (A, B, C, etc).",
         "lifestyle": "Strictly avoid alcohol, maintain hydration, and eat small, light meals.",
         "doctor": "Hepatologist / Gastroenterologist"
+    },
+    "COVID-19": {
+        "desc": "A highly contagious respiratory disease caused by the SARS-CoV-2 virus.",
+        "meds": "Antivirals (Paxlovid) for severe cases, Acetaminophen for fever, cough suppressants.",
+        "lifestyle": "Isolate, rest, stay hydrated, monitor blood oxygen levels.",
+        "doctor": "General Physician / Pulmonologist"
+    },
+    "Cholera": {
+        "desc": "An acute diarrheal illness caused by infection of the intestine with Vibrio cholerae bacteria.",
+        "meds": "Oral rehydration solution (ORS), intravenous fluids, and antibiotics for severe cases.",
+        "lifestyle": "Drink only safe/boiled water, eat well-cooked food, maintain strict hygiene.",
+        "doctor": "Infectious Disease Specialist / General Physician"
+    },
+    "Flu": {
+        "desc": "Influenza is a viral infection that attacks your respiratory system — your nose, throat and lungs.",
+        "meds": "Antivirals (Oseltamivir), pain relievers, fever reducers.",
+        "lifestyle": "Get plenty of rest, drink clear fluids, avoid contact with others.",
+        "doctor": "General Physician"
+    },
+    "Food Poisoning": {
+        "desc": "Illness caused by eating contaminated food, marked by nausea, vomiting, and diarrhea.",
+        "meds": "Bismuth subsalicylate (Pepto-Bismol), anti-diarrheals (Loperamide) unless fever/blood present.",
+        "lifestyle": "Stay hydrated with ORS, eat a bland (BRAT) diet, avoid dairy and spicy food temporarily.",
+        "doctor": "General Physician / Gastroenterologist"
+    },
+    "Measles": {
+        "desc": "A highly contagious viral infection that causes a total-body skin rash and flu-like symptoms.",
+        "meds": "Fever reducers (Acetaminophen), Vitamin A supplements.",
+        "lifestyle": "Rest, stay hydrated, use a humidifier to relieve cough, isolate to prevent spreading.",
+        "doctor": "Paediatrician / General Physician"
     }
 }
